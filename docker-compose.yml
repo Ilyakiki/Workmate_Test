@@ -7,27 +7,35 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - .env
+    restart: no
     networks:
       - fastapi-network
 
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: postgres_db
     restart: always
+    ports:
+      - "127.0.0.1:5555:5432"
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     networks:
       - fastapi-network
-
-volumes:
-  postgres_data:
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   fastapi-network:

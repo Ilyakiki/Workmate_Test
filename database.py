@@ -25,3 +25,10 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
             raise e
         finally:
             await session.close()
+
+async def init_database() -> None:
+    async with engine.begin() as conn:
+        try:
+            await conn.run_sync(Base.metadata.create_all)
+        except:
+            pass
